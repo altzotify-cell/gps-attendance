@@ -21,71 +21,84 @@
     <button type="submit" disabled>Submit Attendance</button>
   </form>
 
-  <script>
-    const form = document.getElementById('attendance-form');
-    const latitudeInput = document.getElementById('latitude');
-    const longitudeInput = document.getElementById('longitude');
-    const statusDiv = document.getElementById('location-status');
-    const submitButton = form.querySelector('button');
+<script>
+  const form = document.getElementById('attendance-form');
+  const latitudeInput = document.getElementById('latitude');
+  const longitudeInput = document.getElementById('longitude');
+  const statusDiv = document.getElementById('location-status');
+  const submitButton = form.querySelector('button');
 
-    const SCHOOL_LAT = 6.69109;
-    const SCHOOL_LON = 1.58334;
-    const ALLOWED_RADIUS_METERS = 150;
+  // === SCHOOL LOCATION (Set this to where students must be) ===
+  const SCHOOL_LAT = 5.68;  // update this to your exact school lat
+  const SCHOOL_LON = 	-0.27; // update this to your exact school lon
+  const ALLOWED_RADIUS_METERS = 150;  // increase to 500 for testing
 
-    function toRadians(deg) {
-      return deg * Math.PI / 180;
-    }
+  // === Distance Calculation ===
+  function toRadians(deg) {
+    return deg * Math.PI / 180;
+  }
 
-    function getDistanceMeters(lat1, lon1, lat2, lon2) {
-      const R = 6371e3; // metres
-      const φ1 = toRadians(lat1);
-      const φ2 = toRadians(lat2);
-      const Δφ = toRadians(lat2 - lat1);
-      const Δλ = toRadians(lon2 - lon1);
+  function getDistanceMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // metres
+    const φ1 = toRadians(lat1);
+    const φ2 = toRadians(lat2);
+    const Δφ = toRadians(lat2 - lat1);
+    const Δλ = toRadians(lon2 - lon1);
 
-      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        const distance = getDistanceMeters(lat, lon, SCHOOL_LAT, SCHOOL_LON);
+  // === Get Live Location ===
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const distance = getDistanceMeters(lat, lon, SCHOOL_LAT, SCHOOL_LON);
 
-        latitudeInput.value = lat;
-        longitudeInput.value = lon;
+      // Store hidden values
+      latitudeInput.value = lat;
+      longitudeInput.value = lon;
 
-        if (distance <= ALLOWED_RADIUS_METERS) {
-          statusDiv.textContent = `📍 You're within the allowed zone (${distance.toFixed(1)}m)`;
-          statusDiv.style.color = 'green';
-          submitButton.disabled = false;
-        } else {
-          statusDiv.textContent = `❌ You're out of range! (${distance.toFixed(1)}m)`;
-          statusDiv.style.color = 'red';
-        }
-      },
-      (err) => {
-        statusDiv.textContent = "⚠️ Could not get your location. Please enable GPS.";
+      // Show debug info
+      statusDiv.innerHTML = `
+        📍 Your Coordinates: <b>${lat.toFixed(6)}, ${lon.toFixed(6)}</b><br/>
+        🎯 Distance to school: <b>${distance.toFixed(2)} meters</b><br/>
+      `;
+
+      // Allow or block submission
+      if (distance <= ALLOWED_RADIUS_METERS) {
+        statusDiv.innerHTML += `<span style="color:green;">✅ You are within range</span>`;
+        submitButton.disabled = false;
+      } else {
+        statusDiv.innerHTML += `<span style="color:red;">❌ You are out of range</span>`;
         submitButton.disabled = true;
       }
-    );
+    },
+    (err) => {
+      statusDiv.innerHTML = "⚠️ Could not get your location. Please allow GPS.";
+      submitButton.disabled = true;
+    }
+  );
 
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const formData = new FormData(form);
-      await fetch("https://script.google.com/macros/s/AKfycby5dUW_q3tRenipZjwn4-QoqlM9eViLFLsCWEcf8Jzk1bPfcCWMF3XIbXi6-9ptzXbFoA/exec", {
-        method: "POST",
-        body: formData,
-      });
-      alert("✅ Attendance submitted!");
-    };
-  </script>
+  // === Handle Submit ===
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    await fetch("YOUR_GOOGLE_SCRIPT_URL", {
+      method: "POST",
+      body: formData,
+    });
+    alert("✅ Attendance submitted!");
+  };
+</script>
+
 </body>
 </html>
+
 
 
 
