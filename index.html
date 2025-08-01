@@ -77,7 +77,7 @@
     form.onsubmit = async (e) => {
       e.preventDefault();
       const formData = new FormData(form);
-      await fetch("YOUR_GOOGLE_SCRIPT_URL", {
+      await fetch("https://script.google.com/macros/s/AKfycby5dUW_q3tRenipZjwn4-QoqlM9eViLFLsCWEcf8Jzk1bPfcCWMF3XIbXi6-9ptzXbFoA/exec", {
         method: "POST",
         body: formData,
       });
@@ -86,3 +86,4 @@
   </script>
 </body>
 </html>
+
